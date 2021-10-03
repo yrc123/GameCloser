@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,11 +13,9 @@ namespace 进程管理器
 {
     class Program
     {
-        static string[] PROCESS_NAMES = { "UUVoice" , "YY" };
-        //static int MAX_SLEEP_TIME = 10 * 60 * 1000;
-        //static int MIN_SLEEP_TIME = 5 * 60 * 1000;
-        static int MAX_SLEEP_TIME = 5000;
-        static int MIN_SLEEP_TIME = 3000;
+        const string SERVER_IP = "127.0.0.1";
+        const int SERVER_PORT = 4444;
+
         public static void KillProcess(string[] processNames)//关闭线程
         {
             foreach (Process p in Process.GetProcesses())//GetProcessesByName(strProcessesByName))
@@ -53,13 +53,23 @@ namespace 进程管理器
         }
         static void Main(string[] args)
         {
-            Random random = new Random();
-            for (; ; )
-            {
-                KillProcess(PROCESS_NAMES);
-                Thread.Sleep(random.Next(MIN_SLEEP_TIME, MAX_SLEEP_TIME));
-            }
-
+            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPAddress address = IPAddress.Parse(SERVER_IP);
+            IPEndPoint endPoint = new IPEndPoint(address, SERVER_PORT);
+            socket.Connect(endPoint);
+            Thread client = new Thread(new ParameterizedThreadStart(ListenReceive));
+            client.IsBackground = false;
+            client.Start(socket);
+        }
+        private static void ListenReceive(Object obj)
+        {
+            Socket socket = (Socket) obj;
+            byte[] buffer = new byte[10240];
+            Console.WriteLine("connect success!");
+            int length = socket.Receive(buffer);
+            string gameName = System.Text.Encoding.UTF8.GetString(buffer,0,length);
+            Console.WriteLine("Closing " + gameName);
+            Console.ReadLine();
         }
     }
 }
