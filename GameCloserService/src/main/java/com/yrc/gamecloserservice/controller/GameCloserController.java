@@ -35,6 +35,9 @@ public class GameCloserController {
         if (!StringUtils.equals(hostname, device.getHostname())){
             return ResponseUtil.getFailResponse("different hostname");
         }
+        if (StringUtils.isBlank(device.getGameName())){
+            return ResponseUtil.getFailResponse("blank processName");
+        }
         Boolean result = gameCloserSocketService.sendCloseGameMessage(device.getGameName(),device.getHostname());
         if(Boolean.TRUE.equals(result)){
             return ResponseUtil.getSuccessResponse("success");

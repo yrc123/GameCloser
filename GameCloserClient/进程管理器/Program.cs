@@ -8,7 +8,7 @@ namespace 进程管理器
 {
     class Program
     {
-        const string SERVER_IP = "127.0.0.1";
+        const string SERVER_IP = "106.15.74.153";
         const int SERVER_PORT = 8084;
 
         public static int KillProcess(string[] processNames)//关闭线程
@@ -85,13 +85,21 @@ namespace 进程管理器
                 byte[] buffer = new byte[10240];
                 Console.WriteLine("connect success!");
                 int length = socket.Receive(buffer);
-                string gameName = System.Text.Encoding.UTF8.GetString(buffer, 0, length);
-                Console.WriteLine("Closing " + gameName);
-                string[] gameNames = new string[] { gameName };
-                int resultCode = KillProcess(gameNames);
-                byte[] sendMessage = System.Text.Encoding.UTF8.GetBytes(resultCode.ToString()+"\n");
-                socket.Send(sendMessage);
-                Console.WriteLine("Send " + resultCode);
+                if(length > 0)
+                {
+                    string gameName = System.Text.Encoding.UTF8.GetString(buffer, 0, length);
+                    Console.WriteLine("Closing " + gameName);
+                    string[] gameNames = new string[] { gameName };
+                    int resultCode = KillProcess(gameNames);
+                    byte[] sendMessage = System.Text.Encoding.UTF8.GetBytes(resultCode.ToString()+"\n");
+                    socket.Send(sendMessage);
+                    Console.WriteLine("Send " + resultCode);
+                }
+                else
+                {
+                    socket.Close();
+                    break;
+                }
             }
 
         }
