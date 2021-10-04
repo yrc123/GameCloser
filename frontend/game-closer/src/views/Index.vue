@@ -30,6 +30,7 @@
 		</div>
 		<el-button type="primary" @click="send">发送</el-button>
 		<el-button type="primary" @click="getResult" style="margin-top: 20px;">获取结果</el-button>
+
   </div>
 </template>
 
