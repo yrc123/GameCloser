@@ -1,8 +1,8 @@
 <template>
   <div class="content">
-		<div class="a" style="display: flex;">
+		<div class="a" style="display: flex;flex-wrap:wrap;align-items: center;justify-content: center;">
 			<div class="select">
-				<el-select v-model="value" placeholder="请选择主机">
+				<el-select v-model="value" placeholder="请选择主机" style="width: 250px;">
 					<el-option
 						v-for="item in hostNameList"
 						:key="item.value"
@@ -12,11 +12,11 @@
 				</el-select>
 			</div>
 			<div class="process">
-				<el-input v-model="processName" placeholder="请输入进程名"></el-input>
+				<el-input v-model="processName" placeholder="请输入进程名" style="width: 250px;"></el-input>
 			</div>
 			<div class="usually-process">
-				<el-select v-model="processName" placeholder="请选择常用进程">
-					<el-option
+				<el-select v-model="processName" placeholder="请选择常用进程" style="width: 250px;">
+					<el-option 
 						v-for="item in usuallyProcess"
 						:key="item.value"
 						:label="item.label"
@@ -29,8 +29,20 @@
 			
 		</div>
 		<el-button type="primary" @click="send">发送</el-button>
-		<el-button type="primary" @click="getResult" style="margin-top: 20px;">获取结果</el-button>
-
+		<div class="result">
+			<el-popover
+				:open-delay="100"
+			  placement="bottom"
+			  width="400"
+			  trigger="click">
+			  <el-table :data="resultList" :height="200">
+			    <el-table-column align="center" width="200" property="ipAddress" sortable label="主机"></el-table-column>
+			    <el-table-column align="center" width="120" property="gameName" sortable label="进程"></el-table-column>
+			    <el-table-column align="center" width="80" property="resultCode" sortable label="结果"></el-table-column>
+			  </el-table>
+			  <el-button slot="reference" @click="getResult" style="margin-top: 20px;">获取结果</el-button>
+			</el-popover>
+		</div>
   </div>
 </template>
 
@@ -46,6 +58,7 @@ export default {
 				value:'',
 				key:'',
 				processName:'',
+				resultList:[],
 				usuallyProcess:[{
 					'processName':'Tim与QQ',
 					'label':'QQ',
@@ -73,7 +86,12 @@ export default {
 			var _this=this;
 			axios.get('http://127.0.0.1:8083/api/devices')
 			.then(function(response){
-				console.log(response.data.data.deviceList)
+				if( response.data.errorCode!=0){
+					_this.$message({
+						message: '获取主机列表失败！',
+						type: 'warning'
+					});
+				}
 				let arr=response.data.data.deviceList;
 				for (var i = 0; i < arr.length; i++) {
 					arr[i].value=i;
@@ -96,15 +114,20 @@ export default {
 			});
 		},
 		getResult(){
-			console.log('获取结果'); 
+			var _this=this;
 			axios.get('http://127.0.0.1:8083/api/devices/result')
 			.then(function(response){
-				console.log(response.data.data.resultList)
-				let arr=response.data.data.resultList;
-				for (var i = 0; i < arr.length; i++) {
-					arr[i].value=i;
+				if( response.data.errorCode!=0){
+					_this.$message({
+						message: '获取结果列表失败！',
+						type: 'warning'
+					});
 				}
-				// _this.hostNameList=arr;
+				_this.resultList=response.data.data.resultList;
+				//模拟多数据
+				// for (var i = 1; i < 20; i++) {
+				// 	_this.resultList[i]=_this.resultList[0]
+				// }
 			});
 		}
 	},
@@ -124,12 +147,15 @@ export default {
 	}
 	
 	.select{
+		margin: 10px 10px 20px;
 	}
 	.send{
 		margin-top: 20px;
 	}
 	.process{
-		margin-left: 20px;
-		margin-right: 20px;
+		margin: 10px 10px 20px;
+	}
+	.usually-process{
+		margin: 10px 10px 20px;
 	}
 </style>
