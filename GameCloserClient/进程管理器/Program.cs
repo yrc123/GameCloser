@@ -13,63 +13,92 @@ namespace 进程管理器
 {
     class Program
     {
-        const string SERVER_IP = "127.0.0.1";
+        const string SERVER_IP = "106.15.74.153";
         const int SERVER_PORT = 4444;
 
-        public static void KillProcess(string[] processNames)//关闭线程
+        public static int KillProcess(string[] processNames)//关闭线程
         {
-            foreach (Process p in Process.GetProcesses())//GetProcessesByName(strProcessesByName))
+            int closedProcess = 0;
+            bool closedFlag = false;
+            do
             {
-                bool closedFlag = false;
-                foreach (string processName in processNames)
+                closedFlag = false;
+                foreach (Process p in Process.GetProcesses())//GetProcessesByName(strProcessesByName))
                 {
-                    if (p.ProcessName.ToUpper().Contains(processName.ToUpper()))
+                    foreach (string processName in processNames)
                     {
-                        try
+                        if (p.ProcessName.ToUpper().Contains(processName.ToUpper()))
                         {
-                            Console.WriteLine("close: " + p.ProcessName);
-                            p.Kill();
-                            p.WaitForExit(); // possibly with a timeout
-                            closedFlag = true;
-                            break;
+                            try
+                            {
+                                p.Kill();
+                                p.WaitForExit(); // possibly with a timeout
+                                closedProcess++;
+                                closedFlag = true;
+                                Console.WriteLine(p.ProcessName + " Closed");
+                                break;
 
-                        }
-                        catch (Win32Exception e)
-                        {
-                            //MessageBox.Show(e.Message.ToString());   // process was terminating or can't be terminated - deal with it
-                        }
-                        catch (InvalidOperationException e)
-                        {
-                            //MessageBox.Show(e.Message.ToString()); // process has already exited - might be able to let this one go
+                            }
+                            catch (Win32Exception e)
+                            {
+                                Console.WriteLine("Close " + p.ProcessName + " Failed");
+                                //MessageBox.Show(e.Message.ToString());   // process was terminating or can't be terminated - deal with it
+                            }
+                            catch (InvalidOperationException e)
+                            {
+                                Console.WriteLine("Close " + p.ProcessName + " Failed");
+                                //MessageBox.Show(e.Message.ToString()); // process has already exited - might be able to let this one go
+                            }
                         }
                     }
+                    if (closedFlag == true)
+                    {
+                        break;
+                    }
                 }
-                if (closedFlag == true)
-                {
-                    break;
-                }
-
-            }
+            } while (closedFlag == true);
+            return closedProcess;
         }
         static void Main(string[] args)
         {
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPAddress address = IPAddress.Parse(SERVER_IP);
             IPEndPoint endPoint = new IPEndPoint(address, SERVER_PORT);
-            socket.Connect(endPoint);
-            Thread client = new Thread(new ParameterizedThreadStart(ListenReceive));
-            client.IsBackground = false;
-            client.Start(socket);
+
+            while (true)
+            {
+                try{
+                    Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    socket.Connect(endPoint);
+                    ListenReceive(socket);
+                } 
+                catch(SocketException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                Console.WriteLine("retry connect...");
+                //Thread client = new Thread(new ParameterizedThreadStart(ListenReceive));
+                //client.IsBackground = false;
+                //client.Start(socket);
+            }
         }
         private static void ListenReceive(Object obj)
         {
-            Socket socket = (Socket) obj;
-            byte[] buffer = new byte[10240];
-            Console.WriteLine("connect success!");
-            int length = socket.Receive(buffer);
-            string gameName = System.Text.Encoding.UTF8.GetString(buffer,0,length);
-            Console.WriteLine("Closing " + gameName);
-            Console.ReadLine();
+            Socket socket = (Socket)obj;
+            while (true)
+            {
+                //todo：缓冲区拼接
+                byte[] buffer = new byte[10240];
+                Console.WriteLine("connect success!");
+                int length = socket.Receive(buffer);
+                string gameName = System.Text.Encoding.UTF8.GetString(buffer, 0, length);
+                Console.WriteLine("Closing " + gameName);
+                string[] gameNames = new string[] { gameName };
+                int resultCode = KillProcess(gameNames);
+                byte[] sendMessage = System.Text.Encoding.UTF8.GetBytes(resultCode.ToString()+"\n");
+                socket.Send(sendMessage);
+                Console.WriteLine("Send " + resultCode);
+            }
+
         }
     }
 }
