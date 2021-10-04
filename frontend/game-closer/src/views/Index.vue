@@ -7,7 +7,7 @@
 						v-for="item in hostNameList"
 						:key="item.value"
 						:label="item.hostname"
-						:value="item.value">
+						:value="item.hostname">
 					</el-option>
 				</el-select>
 			</div>
@@ -19,8 +19,8 @@
 					<el-option
 						v-for="item in usuallyProcess"
 						:key="item.value"
-						:label="item.hostname"
-						:value="item.value">
+						:label="item.label"
+						:value="item.processName">
 					</el-option>
 				</el-select>
 			</div>
@@ -44,8 +44,22 @@ export default {
 			return {
 				hostNameList:[],
 				value:'',
+				key:'',
 				processName:'',
-				usuallyProcess:[],
+				usuallyProcess:[{
+					'processName':'Tim与QQ',
+					'label':'QQ',
+					'value':0
+				},{
+					'processName':'YuanShen',
+					'label':'原神',
+					'value':1
+				},{
+					'processName':'UUVoice',
+					'label':'UU语音',
+					'value':2
+				},
+				],
 			}
 		},
   components: {
@@ -60,7 +74,7 @@ export default {
 			axios.get('http://127.0.0.1:8083/api/devices')
 			.then(function(response){
 				console.log(response.data.data.deviceList)
-				let arr=response.data.deviceList;
+				let arr=response.data.data.deviceList;
 				for (var i = 0; i < arr.length; i++) {
 					arr[i].value=i;
 				}
@@ -69,9 +83,29 @@ export default {
 		},
 		send(){
 			console.log('发送请求');
+			console.log(this.$data.value);
+			let data = {
+				"hostname":this.$data.value,
+				"gameName":this.$data.processName
+			}
+			axios.post('http://127.0.0.1:8083/api/devices/device/'+data.hostname,data)
+			.then(function(response){
+				console.log(response.data)
+				let res = response.data;
+
+			});
 		},
 		getResult(){
 			console.log('获取结果'); 
+			axios.get('http://127.0.0.1:8083/api/devices/result')
+			.then(function(response){
+				console.log(response.data.data.resultList)
+				let arr=response.data.data.resultList;
+				for (var i = 0; i < arr.length; i++) {
+					arr[i].value=i;
+				}
+				// _this.hostNameList=arr;
+			});
 		}
 	},
 }
