@@ -3,7 +3,6 @@ package com.yrc.gamecloserservice.config;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +26,7 @@ public class GameCloserSocketConfig {
     }
     @Bean
     public ThreadPoolExecutor getThreadPoolExecutor(){
-        return new ThreadPoolExecutor(3, 8, 30, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(100));
+        return new ThreadPoolExecutor(4, 8, 30, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(20));
     }
 
     public InetAddress getAddress() {

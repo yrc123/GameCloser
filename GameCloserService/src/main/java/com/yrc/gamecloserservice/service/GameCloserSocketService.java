@@ -1,7 +1,6 @@
 package com.yrc.gamecloserservice.service;
 
 import java.util.List;
-import java.util.Map;
 
 import com.yrc.gamecloserservice.pojo.DeviceDTO;
 import com.yrc.gamecloserservice.pojo.ProcessResultDTO;

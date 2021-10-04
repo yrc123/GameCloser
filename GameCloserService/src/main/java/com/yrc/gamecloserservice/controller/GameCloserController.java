@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.yrc.gamecloserservice.pojo.StopInfoDTO;
+import com.yrc.gamecloserservice.pojo.StopMessageDTO;
 import com.yrc.gamecloserservice.pojo.ResponseDTO;
 import com.yrc.gamecloserservice.service.GameCloserSocketService;
 import com.yrc.gamecloserservice.util.ResponseUtil;
@@ -20,16 +20,21 @@ import com.yrc.gamecloserservice.util.ResponseUtil;
 @RestController
 @RequestMapping("/api")
 public class GameCloserController {
-    @Autowired
     GameCloserSocketService gameCloserSocketService;
+
+    @Autowired
+    public GameCloserController(GameCloserSocketService gameCloserSocketService) {
+        this.gameCloserSocketService = gameCloserSocketService;
+    }
+
     @PostMapping("/devices/device/{hostName}")
-    public ResponseDTO stopGameByHostName(@RequestBody StopInfoDTO device,
+    public ResponseDTO stopGameByHostName(@RequestBody StopMessageDTO device,
             @PathVariable("hostName") String hostname){
         if (!StringUtils.equals(hostname, device.getHostname())){
             return ResponseUtil.getFailResponse("different hostname");
         }
         Boolean result = gameCloserSocketService.sendCloseGameMessage(device.getGameName(),device.getHostname());
-        if(result == true){
+        if(Boolean.TRUE.equals(result)){
             return ResponseUtil.getSuccessResponse("success");
         }else {
             return ResponseUtil.getFailResponse("invalid hostname");

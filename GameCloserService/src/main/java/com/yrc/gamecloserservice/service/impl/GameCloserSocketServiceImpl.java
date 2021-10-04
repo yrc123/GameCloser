@@ -6,24 +6,16 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +29,11 @@ import com.yrc.gamecloserservice.service.GameCloserSocketService;
 
 @Service
 public class GameCloserSocketServiceImpl implements GameCloserSocketService {
-    private Logger logger = LoggerFactory.getLogger(GameCloserSocketServiceImpl.class);
     private ServerSocket serverSocket;
+    private final Logger logger = LoggerFactory.getLogger(GameCloserSocketServiceImpl.class);
     private final Map<DeviceDTO, Socket> socketMap;
     private final List<ProcessResultDTO> results;
-    private ThreadPoolExecutor threadPool;
+    private final ThreadPoolExecutor threadPool;
     @Autowired
     public GameCloserSocketServiceImpl(GameCloserSocketConfig config, ThreadPoolExecutor threadPool){
         this.socketMap = new ConcurrentHashMap<>();
@@ -50,16 +42,13 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
         try {
             this.serverSocket = new ServerSocket(config.getPort(),100, config.getAddress());
             //监听Socket连接
-            Thread listener = new Thread(this::SocketListener);
-            listener.setDaemon(true);
-            listener.setName("SocketListener");
-            threadPool.execute(listener);
+            threadPool.execute(this::socketListener);
             logger.info("socket服务开启成功: {}:{}", config.getAddress(), config.getPort());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    private void SocketListener(){
+    private void socketListener(){
         try {
             while (true){
                 Socket socket = this.serverSocket.accept();
@@ -76,7 +65,9 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
         if(socketMap.containsKey(device)){
             Future<Integer> resultCode = threadPool.submit(()
                     -> doSendCloseGameMessage(socketMap.get(device), gameName));
-            results.add(new ProcessResultDTO(hostname, gameName, resultCode));
+            synchronized (results){
+                results.add(new ProcessResultDTO(hostname, gameName, resultCode));
+            }
             return true;
         }else {
             return false;
@@ -109,7 +100,7 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
             resultCode = Integer.valueOf(result);
         } catch (IOException e) {
             logger.info("io错误，将关闭Socket");
-            socketMap.remove(ipAddress);
+            socketMap.remove(new DeviceDTO(ipAddress));
             resultCode = -2;
         }
         return resultCode;
