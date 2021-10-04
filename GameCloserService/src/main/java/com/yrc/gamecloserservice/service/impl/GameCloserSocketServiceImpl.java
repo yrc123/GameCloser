@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.yrc.gamecloserservice.config.GameCloserSocketConfig;
+import com.yrc.gamecloserservice.pojo.DeviceDTO;
 import com.yrc.gamecloserservice.pojo.ProcessResultDTO;
 import com.yrc.gamecloserservice.service.GameCloserSocketService;
 
@@ -38,7 +39,7 @@ import com.yrc.gamecloserservice.service.GameCloserSocketService;
 public class GameCloserSocketServiceImpl implements GameCloserSocketService {
     private Logger logger = LoggerFactory.getLogger(GameCloserSocketServiceImpl.class);
     private ServerSocket serverSocket;
-    private final Map<String, Socket> socketMap;
+    private final Map<DeviceDTO, Socket> socketMap;
     private final List<ProcessResultDTO> results;
     private ThreadPoolExecutor threadPool;
     @Autowired
@@ -63,30 +64,27 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
             while (true){
                 Socket socket = this.serverSocket.accept();
                 String ipAddress = socket.getRemoteSocketAddress().toString().substring(1);
-                socketMap.put(ipAddress, socket);
+                socketMap.put(new DeviceDTO(ipAddress), socket);
                 logger.info("连接到socket：{}", ipAddress);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public void sendCloseGameMessage(String gameName, String hostname){
-        // for (String key : socketMap.keySet()) {
-        //     Socket socket = socketMap.get(key);
-        //     String ipAddress = socket.getRemoteSocketAddress().toString().substring(1);
-        //     if (StringUtils.equals(ipAddress, hostname)){
-        //         threadPool.submit(() -> doSendCloseGameMessage(socket, gameName));
-        //     }
-        // }
-        if(socketMap.containsKey(hostname)){
+    public Boolean sendCloseGameMessage(String gameName, String hostname){
+        DeviceDTO device = new DeviceDTO(hostname);
+        if(socketMap.containsKey(device)){
             Future<Integer> resultCode = threadPool.submit(()
-                    -> doSendCloseGameMessage(socketMap.get(hostname), gameName));
-            results.add(new ProcessResultDTO(hostname, resultCode));
+                    -> doSendCloseGameMessage(socketMap.get(device), gameName));
+            results.add(new ProcessResultDTO(hostname, gameName, resultCode));
+            return true;
+        }else {
+            return false;
         }
     }
 
     @Override
-    public List<String> listSockets() {
+    public List<DeviceDTO> listSockets() {
         return new ArrayList<>(socketMap.keySet());
     }
 

@@ -5,16 +5,14 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.annotation.RequestScope;
 
-import com.yrc.gamecloserservice.pojo.DeviceDTO;
+import com.yrc.gamecloserservice.pojo.StopInfoDTO;
 import com.yrc.gamecloserservice.pojo.ResponseDTO;
 import com.yrc.gamecloserservice.service.GameCloserSocketService;
 import com.yrc.gamecloserservice.util.ResponseUtil;
@@ -25,13 +23,17 @@ public class GameCloserController {
     @Autowired
     GameCloserSocketService gameCloserSocketService;
     @PostMapping("/devices/device/{hostName}")
-    public ResponseDTO stopGameByHostName(@RequestBody DeviceDTO device,
+    public ResponseDTO stopGameByHostName(@RequestBody StopInfoDTO device,
             @PathVariable("hostName") String hostname){
         if (!StringUtils.equals(hostname, device.getHostname())){
             return ResponseUtil.getFailResponse("different hostname");
         }
-        gameCloserSocketService.sendCloseGameMessage(device.getGameName(),device.getHostname());
-        return ResponseUtil.getSuccessResponse("success");
+        Boolean result = gameCloserSocketService.sendCloseGameMessage(device.getGameName(),device.getHostname());
+        if(result == true){
+            return ResponseUtil.getSuccessResponse("success");
+        }else {
+            return ResponseUtil.getFailResponse("invalid hostname");
+        }
     }
     @GetMapping("/devices")
     public ResponseDTO getSocketList(){

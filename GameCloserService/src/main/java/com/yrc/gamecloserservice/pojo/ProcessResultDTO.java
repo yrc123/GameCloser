@@ -5,6 +5,7 @@ import java.util.concurrent.Future;
 
 public class ProcessResultDTO {
     String ipAddress;
+    String gameName;
     Future<Integer> resultCode;
 
     public String getIpAddress() {
@@ -33,8 +34,17 @@ public class ProcessResultDTO {
     public ProcessResultDTO() {
     }
 
-    public ProcessResultDTO(String ipAddress, Future<Integer> resultCode) {
+    public String getGameName() {
+        return gameName;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
+    }
+
+    public ProcessResultDTO(String ipAddress, String gameName, Future<Integer> resultCode) {
         this.ipAddress = ipAddress;
+        this.gameName = gameName;
         this.resultCode = resultCode;
     }
 }
