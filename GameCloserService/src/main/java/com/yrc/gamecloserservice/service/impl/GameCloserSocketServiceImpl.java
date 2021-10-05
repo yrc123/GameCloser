@@ -76,6 +76,12 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
 
     @Override
     public List<DeviceDTO> listSockets() {
+        socketMap.forEach((key, value) -> {
+            if (Boolean.TRUE.equals(isClosed(value))) {
+                logger.info("无法连接到 {} ，将被移除", value);
+                socketMap.remove(key);
+            }
+        });
         return new ArrayList<>(socketMap.keySet());
     }
 
@@ -104,5 +110,13 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
             resultCode = -2;
         }
         return resultCode;
+    }
+    private Boolean isClosed(Socket socket){
+        try {
+            socket.sendUrgentData(0);
+        } catch (IOException e) {
+            return true;
+        }
+        return false;
     }
 }
