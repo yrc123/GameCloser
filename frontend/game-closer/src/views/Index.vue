@@ -59,20 +59,7 @@ export default {
 				key:'',
 				processName:'',
 				resultList:[],
-				usuallyProcess:[{
-					'processName':'QQ',
-					'label':'Tim与QQ',
-					'value':0
-				},{
-					'processName':'YuanShen',
-					'label':'原神',
-					'value':1
-				},{
-					'processName':'UUVoice',
-					'label':'UU语音',
-					'value':2
-				},
-				],
+				usuallyProcess:[],
 			}
 		},
   components: {
@@ -97,6 +84,15 @@ export default {
 					arr[i].value=i;
 				}
 				_this.hostNameList=arr;
+			});
+			axios.get('http://picgo-fz.oss-cn-shanghai.aliyuncs.com/game-closer/usuallyProcess.json')
+			.then(function(response){
+				console.log(response.data)
+				let usuallyProcessList=response.data.usuallyProcess;
+				for (var i = 0; i < usuallyProcessList.length; i++) {
+					usuallyProcessList[i].value=i;
+				}
+				_this.usuallyProcess=usuallyProcessList;
 			});
 		},
 		send(){
