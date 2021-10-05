@@ -1,6 +1,7 @@
 package com.yrc.gamecloserservice.pojo;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class DeviceDTO {
@@ -15,8 +16,8 @@ public class DeviceDTO {
         this.hostname = hostname;
     }
 
-    public LocalDateTime getCreatedTime() {
-        return createdTime;
+    public String getCreatedTime() {
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(createdTime);
     }
 
     public DeviceDTO(String hostname) {

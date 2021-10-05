@@ -6,7 +6,7 @@
 					<el-option
 						v-for="item in hostNameList"
 						:key="item.value"
-						:label="item.hostname"
+						:label="item.hostname +'   '+ item.createdTime"
 						:value="item.hostname">
 					</el-option>
 				</el-select>
@@ -60,8 +60,8 @@ export default {
 				processName:'',
 				resultList:[],
 				usuallyProcess:[{
-					'processName':'Tim与QQ',
-					'label':'QQ',
+					'processName':'QQ',
+					'label':'Tim与QQ',
 					'value':0
 				},{
 					'processName':'YuanShen',
@@ -100,18 +100,32 @@ export default {
 			});
 		},
 		send(){
+			var _this=this;
 			console.log('发送请求');
 			console.log(this.$data.value);
 			let data = {
 				"hostname":this.$data.value,
 				"gameName":this.$data.processName
 			}
-			axios.post('http://127.0.0.1:8083/api/devices/device/'+data.hostname,data)
-			.then(function(response){
-				console.log(response.data)
-				let res = response.data;
-
-			});
+			console.log(data);
+			if(data.hostname.length > 0){
+				axios.post('http://127.0.0.1:8083/api/devices/device/'+data.hostname,data)
+				.then(function(response){
+					console.log(response.data)
+					let res = response.data;
+					if(res.errorCode!=0){
+						_this.$message({
+							message: res.message,
+							type: 'warning'
+						})
+					}
+				});
+			}else{
+				_this.$message({
+					message: "主机不能为空",
+					type: 'warning'
+				})
+			}
 		},
 		getResult(){
 			var _this=this;

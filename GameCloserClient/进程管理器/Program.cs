@@ -8,7 +8,7 @@ namespace 进程管理器
 {
     class Program
     {
-        const string SERVER_IP = "106.15.74.153";
+        const string SERVER_IP = "127.0.0.1";
         const int SERVER_PORT = 8084;
 
         public static int KillProcess(string[] processNames)//关闭线程
