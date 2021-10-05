@@ -52,6 +52,7 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
         try {
             while (true){
                 Socket socket = this.serverSocket.accept();
+                socket.setSoTimeout(5000);
                 String ipAddress = socket.getRemoteSocketAddress().toString().substring(1);
                 socketMap.put(new DeviceDTO(ipAddress), socket);
                 logger.info("连接到socket：{}", ipAddress);
@@ -78,7 +79,12 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
     public List<DeviceDTO> listSockets() {
         socketMap.forEach((key, value) -> {
             if (Boolean.TRUE.equals(isClosed(value))) {
-                logger.info("无法连接到 {} ，将被移除", value);
+                logger.info("无法连接到 {} ，将关闭连接", value);
+                try {
+                    value.close();
+                } catch (IOException ex) {
+                    logger.info("关闭失败");
+                }
                 socketMap.remove(key);
             }
         });
@@ -106,6 +112,11 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
             resultCode = Integer.valueOf(result);
         } catch (IOException e) {
             logger.info("io错误，将关闭Socket");
+            try {
+                socket.close();
+            } catch (IOException ex) {
+                logger.info("关闭失败");
+            }
             socketMap.remove(new DeviceDTO(ipAddress));
             resultCode = -2;
         }
