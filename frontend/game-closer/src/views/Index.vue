@@ -36,10 +36,10 @@
 			  width="400"
 			  trigger="click">
 			  <el-table :data="resultList" :height="200">
-			    <el-table-column align="center" width="200" property="hostname" sortable label="主机"></el-table-column>
+			    <el-table-column align="center" width="170" property="hostname" sortable label="主机"></el-table-column>
 			    <el-table-column align="center" width="120" property="gameName" sortable label="进程"></el-table-column>
-			    <el-table-column align="center" width="80" property="resultCode" sortable label="结果"></el-table-column>
-			    <el-table-column align="center" width="200" property="createdTime" sortable label="创建时间"></el-table-column>
+			    <el-table-column align="center" width="90" property="resultCode" sortable label="结果"></el-table-column>
+			    <el-table-column align="center" width="170" property="createdTime" sortable label="创建时间"></el-table-column>
 			  </el-table>
 			  <el-button slot="reference" @click="getResult" style="margin-top: 20px;">获取结果</el-button>
 			</el-popover>
@@ -115,6 +115,11 @@ export default {
 							message: res.message,
 							type: 'warning'
 						})
+					}else{
+						_this.$message({
+							message: "发送成功",
+							type: 'success'
+						})
 					}
 				});
 			}else{
@@ -134,11 +139,13 @@ export default {
 						type: 'warning'
 					});
 				}
-				_this.resultList=response.data.data.resultList;
-				//模拟多数据
-				// for (var i = 1; i < 20; i++) {
-				// 	_this.resultList[i]=_this.resultList[0]
-				// }
+				var arr = response.data.data.resultList;
+				for(var i=0; i<arr.length; i++){
+					if( arr[i].resultCode == null ){
+						arr[i].resultCode="结果未返回";
+					}
+				}
+				_this.resultList=arr;
 			});
 		}
 	},
