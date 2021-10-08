@@ -13,12 +13,16 @@ import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import java.util.stream.Collectors;
 import javax.el.BeanNameELResolver;
 import javax.naming.ldap.SortKey;
 import org.slf4j.Logger;
@@ -50,7 +54,7 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
         this.socketMap = new ConcurrentHashMap<>();
         this.keepAliveMap = new ConcurrentHashMap<>();
         this.threadPool = threadPool;
-        this.resultMap = new ConcurrentHashMap<>();
+        this.resultMap = Collections.synchronizedMap(new LinkedHashMap<>());
         try {
             this.serverSocket = new ServerSocket(config.getPort(),100, config.getAddress());
             //监听Socket连接
@@ -133,7 +137,9 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
 
     @Override
     public List<ProcessResultDTO> listResults() {
-        return new ArrayList<>(resultMap.values());
+        return resultMap.values().stream()
+                .sorted(Comparator.comparing(ProcessResultDTO::getLocalDateTime).reversed())
+                .collect(Collectors.toList());
     }
 
     private void sendMessage(Socket socket, SendDTO message){

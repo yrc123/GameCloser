@@ -2,6 +2,7 @@ package com.yrc.gamecloserservice.pojo;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -51,6 +52,9 @@ public class ProcessResultDTO {
     public String getCreatedTime() {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(createdTime);
     }
+    public LocalDateTime getLocalDateTime(){
+        return createdTime;
+    }
 
     @Override
     public String toString() {
@@ -61,5 +65,18 @@ public class ProcessResultDTO {
                 ", resultCode=" + resultCode +
                 ", createdTime=" + createdTime +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+        ProcessResultDTO resultDTO = (ProcessResultDTO) o;
+        return Objects.equals(guid, resultDTO.guid) && Objects.equals(hostname, resultDTO.hostname) && Objects.equals(gameName, resultDTO.gameName) && Objects.equals(resultCode, resultDTO.resultCode) && Objects.equals(createdTime, resultDTO.createdTime);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(guid, hostname, gameName, resultCode, createdTime);
     }
 }
