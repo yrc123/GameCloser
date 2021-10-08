@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -19,13 +20,16 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.yrc.gamecloserservice.config.GameCloserSocketConfig;
 import com.yrc.gamecloserservice.pojo.DeviceDTO;
 import com.yrc.gamecloserservice.pojo.ProcessResultDTO;
+import com.yrc.gamecloserservice.pojo.SendDTO;
 import com.yrc.gamecloserservice.service.GameCloserSocketService;
-
+import com.yrc.gamecloserservice.util.JacksonUtils;
 
 @Service
 public class GameCloserSocketServiceImpl implements GameCloserSocketService {
@@ -34,6 +38,10 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
     private final Map<DeviceDTO, Socket> socketMap;
     private final List<ProcessResultDTO> results;
     private final ThreadPoolExecutor threadPool;
+    private final static String KEEY_ALIVE_WORD = "关注嘉然，顿顿解馋";
+    @Value("${debug}")
+    private Boolean debug;
+
     @Autowired
     public GameCloserSocketServiceImpl(GameCloserSocketConfig config, ThreadPoolExecutor threadPool){
         this.socketMap = new ConcurrentHashMap<>();
@@ -75,6 +83,18 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
         }
     }
 
+    @Scheduled(cron = "*/1 * * * * *")
+    public void keepAlive(){
+        if(socketMap.size() > 0){
+            logger.debug("开始发送心跳包");
+            socketMap.forEach((key, value) ->
+                    threadPool.submit(() -> doSendCloseGameMessage(
+                            value,
+                            Objects.requireNonNull(JacksonUtils.serialize(SendDTO.keepAliveObject())),
+                            debug)));
+        }
+    }
+
     @Override
     public List<DeviceDTO> listSockets() {
         socketMap.forEach((key, value) -> {
@@ -97,6 +117,9 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
     }
 
     private Integer doSendCloseGameMessage(Socket socket, String message){
+        return doSendCloseGameMessage(socket, message, true);
+    }
+    private Integer doSendCloseGameMessage(Socket socket, String message, Boolean printLog){
         String ipAddress = socket.getRemoteSocketAddress().toString().substring(1);
         Integer resultCode = 0;
         try {
@@ -104,14 +127,18 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
             Reader reader = new InputStreamReader(socket.getInputStream());
             writer.write(new String(message.getBytes(), StandardCharsets.UTF_8));
             writer.flush();
-            logger.info("发送进程名 {} 到 {}", message, ipAddress);
+            if(Boolean.TRUE.equals(printLog)){
+                logger.info("发送进程名 {} 到 {}", message, ipAddress);
+            }
 
             BufferedReader br = new BufferedReader(reader);
             String result = br.readLine();
-            logger.info("{} 执行 {} 结果：{}",ipAddress, message, result);
+            if(Boolean.TRUE.equals(printLog)){
+                logger.info("{} 执行 {} 结果：{}",ipAddress, message, result);
+            }
             resultCode = Integer.valueOf(result);
         } catch (IOException e) {
-            logger.info("io错误，将关闭Socket");
+            logger.info("io错误，将关闭{}", socket);
             try {
                 socket.close();
             } catch (IOException ex) {
@@ -129,5 +156,12 @@ public class GameCloserSocketServiceImpl implements GameCloserSocketService {
             return true;
         }
         return false;
+    }
+    public Boolean getDebug() {
+        return debug;
+    }
+
+    public void setDebug(Boolean debug) {
+        this.debug = debug;
     }
 }

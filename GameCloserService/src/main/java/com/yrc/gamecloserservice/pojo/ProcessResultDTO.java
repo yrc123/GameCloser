@@ -1,12 +1,16 @@
 package com.yrc.gamecloserservice.pojo;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class ProcessResultDTO {
+    String guid;
     String ipAddress;
     String gameName;
     Future<Integer> resultCode;
+    LocalDateTime createdTime;
 
     public String getIpAddress() {
         return ipAddress;
@@ -32,6 +36,7 @@ public class ProcessResultDTO {
     }
 
     public ProcessResultDTO() {
+        this.createdTime=LocalDateTime.now();
     }
 
     public String getGameName() {
@@ -40,6 +45,10 @@ public class ProcessResultDTO {
 
     public void setGameName(String gameName) {
         this.gameName = gameName;
+    }
+
+    public String getCreatedTime() {
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(createdTime);
     }
 
     public ProcessResultDTO(String ipAddress, String gameName, Future<Integer> resultCode) {

@@ -1,6 +1,7 @@
 package com.yrc.gamecloserservice.pojo;
 
 public class StopMessageDTO {
+    private String guid;
     private String hostname;
     private String gameName;
 

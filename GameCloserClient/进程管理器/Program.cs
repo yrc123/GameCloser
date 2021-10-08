@@ -1,8 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
+using System.Text.Json.Serialization;
+using System.IO;
+using System.Text.Json;
+using System.Threading;
 
 namespace 进程管理器
 {
@@ -10,6 +14,7 @@ namespace 进程管理器
     {
         const string SERVER_IP = "127.0.0.1";
         const int SERVER_PORT = 8084;
+        static int keepAliveNum = 0;
 
         public static int KillProcess(string[] processNames)//关闭线程
         {
@@ -37,12 +42,10 @@ namespace 进程管理器
                             catch (Win32Exception e)
                             {
                                 Console.WriteLine("Close " + p.ProcessName + " Failed");
-                                //MessageBox.Show(e.Message.ToString());   // process was terminating or can't be terminated - deal with it
                             }
                             catch (InvalidOperationException e)
                             {
                                 Console.WriteLine("Close " + p.ProcessName + " Failed");
-                                //MessageBox.Show(e.Message.ToString()); // process has already exited - might be able to let this one go
                             }
                         }
                     }
@@ -62,8 +65,11 @@ namespace 进程管理器
             while (true)
             {
                 try{
-                    Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                     socket.Connect(endPoint);
+                    //NetworkStream stream = new NetworkStream(socket, true);
+                    Thread alive = new Thread(new ParameterizedThreadStart(keepAlive));
+                    alive.Start(socket);
                     ListenReceive(socket);
                 } 
                 catch(SocketException e)
@@ -71,9 +77,6 @@ namespace 进程管理器
                     Console.WriteLine(e.Message);
                 }
                 Console.WriteLine("retry connect...");
-                //Thread client = new Thread(new ParameterizedThreadStart(ListenReceive));
-                //client.IsBackground = false;
-                //client.Start(socket);
             }
         }
         private static void ListenReceive(Object obj)
@@ -87,13 +90,24 @@ namespace 进程管理器
                 int length = socket.Receive(buffer);
                 if(length > 0)
                 {
-                    string gameName = System.Text.Encoding.UTF8.GetString(buffer, 0, length);
-                    Console.WriteLine("Closing " + gameName);
-                    string[] gameNames = new string[] { gameName };
-                    int resultCode = KillProcess(gameNames);
-                    byte[] sendMessage = System.Text.Encoding.UTF8.GetBytes(resultCode.ToString()+"\n");
-                    socket.Send(sendMessage);
-                    Console.WriteLine("Send " + resultCode);
+                    string json = System.Text.Encoding.UTF8.GetString(buffer, 0, length);
+                    Console.WriteLine("receive: " + json);
+                    SendDTO message = JsonSerializer.Deserialize<SendDTO>(json);
+                    if(message.type.Equals(Type.KEEY_ALIVE))
+                    {
+                        keepAliveNum = 0;
+                    }
+                    else if (message.type.Equals(Type.EXEC))
+                    {
+                        Console.WriteLine("Closing " + message.gameName);
+                        string[] gameNames = new string[] { message.gameName };
+                        int resultCode = KillProcess(gameNames);
+                        message.resultCode = resultCode;
+                        message.type = Type.RESULT;
+                        byte[] sendMessage = JsonSerializer.SerializeToUtf8Bytes(message);
+                        socket.Send(sendMessage);
+                        Console.WriteLine("Send " + resultCode);
+                    }
                 }
                 else
                 {
@@ -102,6 +116,23 @@ namespace 进程管理器
                 }
             }
 
+        }
+        private static void keepAlive(Object socket)
+        {
+            while (true)
+            {
+                Thread.Sleep(30*1000);
+                if (keepAliveNum >= 2)
+                {
+                    ((Socket)socket).Close();
+                    keepAliveNum = 0;
+                    break;
+                }
+                else
+                {
+                    keepAliveNum++;
+                }
+            }
         }
     }
 }

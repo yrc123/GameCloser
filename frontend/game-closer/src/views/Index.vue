@@ -71,7 +71,7 @@ export default {
 	methods:{
 		init(){
 			var _this=this;
-			axios.get('http://127.0.0.1:8083/api/devices')
+			axios.get('http://106.15.74.153:8083/api/devices')
 			.then(function(response){
 				if( response.data.errorCode!=0){
 					_this.$message({
@@ -105,7 +105,7 @@ export default {
 			}
 			console.log(data);
 			if(data.hostname.length > 0){
-				axios.post('http://127.0.0.1:8083/api/devices/device/'+data.hostname,data)
+				axios.post('http://106.15.74.153:8083/api/devices/device/'+data.hostname,data)
 				.then(function(response){
 					console.log(response.data)
 					let res = response.data;
@@ -125,7 +125,7 @@ export default {
 		},
 		getResult(){
 			var _this=this;
-			axios.get('http://127.0.0.1:8083/api/devices/result')
+			axios.get('http://106.15.74.153:8083/api/devices/result')
 			.then(function(response){
 				if( response.data.errorCode!=0){
 					_this.$message({
