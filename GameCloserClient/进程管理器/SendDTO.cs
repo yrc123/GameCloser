@@ -9,6 +9,7 @@ namespace 进程管理器
     class SendDTO
     {
         public Type type { get; set; }
+        public string hostname { get; set; }
         public string guid { get; set; }
         public int resultCode { get; set; }
         public string gameName { get; set; }

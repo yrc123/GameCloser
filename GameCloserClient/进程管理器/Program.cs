@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Net;
-using System.Text.Json.Serialization;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -12,7 +11,7 @@ namespace 进程管理器
 {
     class Program
     {
-        const string SERVER_IP = "127.0.0.1";
+        const string SERVER_IP = "106.15.74.153";
         const int SERVER_PORT = 8084;
         static int keepAliveNum = 0;
 
@@ -76,17 +75,18 @@ namespace 进程管理器
                 {
                     Console.WriteLine(e.Message);
                 }
+                Thread.Sleep(5 * 1000);
                 Console.WriteLine("retry connect...");
             }
         }
         private static void ListenReceive(Object obj)
         {
             Socket socket = (Socket)obj;
+            Console.WriteLine("connect success!");
             while (true)
             {
                 //todo：缓冲区拼接
                 byte[] buffer = new byte[10240];
-                Console.WriteLine("connect success!");
                 int length = socket.Receive(buffer);
                 if(length > 0)
                 {
@@ -96,6 +96,8 @@ namespace 进程管理器
                     if(message.type.Equals(Type.KEEY_ALIVE))
                     {
                         keepAliveNum = 0;
+                        string sendMessage = JsonSerializer.Serialize(message) + "\n";
+                        socket.Send(System.Text.Encoding.UTF8.GetBytes(sendMessage));
                     }
                     else if (message.type.Equals(Type.EXEC))
                     {
@@ -104,8 +106,8 @@ namespace 进程管理器
                         int resultCode = KillProcess(gameNames);
                         message.resultCode = resultCode;
                         message.type = Type.RESULT;
-                        byte[] sendMessage = JsonSerializer.SerializeToUtf8Bytes(message);
-                        socket.Send(sendMessage);
+                        string sendMessage = JsonSerializer.Serialize(message) + "\n";
+                        socket.Send(System.Text.Encoding.UTF8.GetBytes(sendMessage));
                         Console.WriteLine("Send " + resultCode);
                     }
                 }

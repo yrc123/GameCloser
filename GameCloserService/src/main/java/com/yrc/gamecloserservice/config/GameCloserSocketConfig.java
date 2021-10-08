@@ -26,7 +26,7 @@ public class GameCloserSocketConfig {
     }
     @Bean
     public ThreadPoolExecutor getThreadPoolExecutor(){
-        return new ThreadPoolExecutor(4, 8, 30, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(20));
+        return new ThreadPoolExecutor(8, 16, 30, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(20));
     }
 
     public InetAddress getAddress() {

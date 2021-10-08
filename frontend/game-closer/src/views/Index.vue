@@ -36,9 +36,10 @@
 			  width="400"
 			  trigger="click">
 			  <el-table :data="resultList" :height="200">
-			    <el-table-column align="center" width="200" property="ipAddress" sortable label="主机"></el-table-column>
+			    <el-table-column align="center" width="200" property="hostname" sortable label="主机"></el-table-column>
 			    <el-table-column align="center" width="120" property="gameName" sortable label="进程"></el-table-column>
 			    <el-table-column align="center" width="80" property="resultCode" sortable label="结果"></el-table-column>
+			    <el-table-column align="center" width="200" property="createdTime" sortable label="创建时间"></el-table-column>
 			  </el-table>
 			  <el-button slot="reference" @click="getResult" style="margin-top: 20px;">获取结果</el-button>
 			</el-popover>

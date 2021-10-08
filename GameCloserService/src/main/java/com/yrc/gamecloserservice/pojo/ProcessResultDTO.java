@@ -7,31 +7,32 @@ import java.util.concurrent.Future;
 
 public class ProcessResultDTO {
     String guid;
-    String ipAddress;
+    String hostname;
     String gameName;
-    Future<Integer> resultCode;
+    Integer resultCode;
     LocalDateTime createdTime;
 
-    public String getIpAddress() {
-        return ipAddress;
+    public String getHostname() {
+        return hostname;
     }
 
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
+    public String getGuid() {
+        return guid;
+    }
+
+    public void setGuid(String guid) {
+        this.guid = guid;
     }
 
     public Integer getResultCode() {
-        try {
-            return resultCode.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return resultCode;
     }
 
-    public void setResultCode(Future<Integer> resultCode) {
+    public void setResultCode(Integer resultCode) {
         this.resultCode = resultCode;
     }
 
@@ -51,9 +52,14 @@ public class ProcessResultDTO {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(createdTime);
     }
 
-    public ProcessResultDTO(String ipAddress, String gameName, Future<Integer> resultCode) {
-        this.ipAddress = ipAddress;
-        this.gameName = gameName;
-        this.resultCode = resultCode;
+    @Override
+    public String toString() {
+        return "ProcessResultDTO{" +
+                "guid='" + guid + '\'' +
+                ", hostname='" + hostname + '\'' +
+                ", gameName='" + gameName + '\'' +
+                ", resultCode=" + resultCode +
+                ", createdTime=" + createdTime +
+                '}';
     }
 }
